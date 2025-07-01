@@ -1,0 +1,79 @@
+name: Test QA CI Reporter
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  test-with-jest:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'npm'
+    
+    - name: Install dependencies
+      run: npm ci
+    
+    - name: Run tests and report
+      uses: ./
+      with:
+        test-command: 'npm test'
+        test-results-path: 'test-results.xml'
+        report-title: 'Jest Test Results'
+        notification-channels: 'slack'
+        slack-webhook-url: ${{ secrets.SLACK_WEBHOOK_URL }}
+        fail-on-test-failure: true
+
+  test-with-custom-command:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Run custom tests and report
+      uses: ./
+      with:
+        test-command: 'echo "Tests: 2 failed, 8 passed, 1 skipped, 11 total"'
+        report-title: 'Custom Test Results'
+        notification-channels: 'slack,email'
+        slack-webhook-url: ${{ secrets.SLACK_WEBHOOK_URL }}
+        email-smtp-host: ${{ secrets.EMAIL_SMTP_HOST }}
+        email-username: ${{ secrets.EMAIL_USERNAME }}
+        email-password: ${{ secrets.EMAIL_PASSWORD }}
+        email-from: 'ci@example.com'
+        email-to: 'team@example.com'
+        fail-on-test-failure: false
+
+  test-playwright:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v4
+    
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+    
+    - name: Install Playwright
+      run: |
+        npm install @playwright/test
+        npx playwright install chromium
+    
+    - name: Run Playwright tests with reporting
+      uses: ./
+      with:
+        test-command: 'npx playwright test --reporter=junit'
+        test-results-path: 'test-results.xml'
+        report-title: 'Playwright E2E Tests'
+        notification-channels: 'telegram'
+        telegram-bot-token: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+        telegram-chat-id: ${{ secrets.TELEGRAM_CHAT_ID }} 

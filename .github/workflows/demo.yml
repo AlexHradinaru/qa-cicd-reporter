@@ -1,0 +1,277 @@
+name: 🧪 QA CI Reporter Demo
+
+on:
+  push:
+    branches: [ main, demo ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+    inputs:
+      test_scenario:
+        description: 'Test scenario to run'
+        required: false
+        default: 'mixed'
+        type: choice
+        options:
+        - passing
+        - failing
+        - mixed
+        - cypress
+        - playwright
+
+jobs:
+  # Demo 1: Passing Tests
+  demo-passing-tests:
+    name: "✅ Demo: All Tests Pass"
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+    
+    - name: Make mock test runner executable
+      run: chmod +x demo/mock-test-runner.sh
+    
+    - name: Run QA CI Reporter - Passing Tests
+      uses: ./
+      with:
+        test-command: './demo/mock-test-runner.sh passing'
+        report-title: '✅ All Tests Passing Demo'
+        notification-channels: 'console'
+        fail-on-test-failure: false
+
+  # Demo 2: Mixed Results (Some Failures)
+  demo-mixed-results:
+    name: "⚠️ Demo: Mixed Test Results"
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+    
+    - name: Make mock test runner executable
+      run: chmod +x demo/mock-test-runner.sh
+    
+    - name: Run QA CI Reporter - Mixed Results
+      uses: ./
+      with:
+        test-command: './demo/mock-test-runner.sh mixed'
+        report-title: '⚠️ Mixed Results Demo (Jest)'
+        notification-channels: 'console'
+        fail-on-test-failure: false
+
+  # Demo 3: All Tests Failing
+  demo-failing-tests:
+    name: "❌ Demo: All Tests Fail"
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+    
+    - name: Make mock test runner executable
+      run: chmod +x demo/mock-test-runner.sh
+    
+    - name: Run QA CI Reporter - Failing Tests
+      uses: ./
+      with:
+        test-command: './demo/mock-test-runner.sh failing'
+        report-title: '❌ All Tests Failing Demo'
+        notification-channels: 'console'
+        fail-on-test-failure: false
+
+  # Demo 4: Cypress E2E Tests
+  demo-cypress-tests:
+    name: "🌀 Demo: Cypress E2E Tests"
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+    
+    - name: Make mock test runner executable
+      run: chmod +x demo/mock-test-runner.sh
+    
+    - name: Run QA CI Reporter - Cypress Tests
+      uses: ./
+      with:
+        test-command: './demo/mock-test-runner.sh cypress'
+        report-title: '🌀 Cypress E2E Test Results'
+        notification-channels: 'console'
+        fail-on-test-failure: false
+
+  # Demo 5: Playwright Tests
+  demo-playwright-tests:
+    name: "🎭 Demo: Playwright Tests"
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+    
+    - name: Make mock test runner executable
+      run: chmod +x demo/mock-test-runner.sh
+    
+    - name: Run QA CI Reporter - Playwright Tests
+      uses: ./
+      with:
+        test-command: './demo/mock-test-runner.sh playwright'
+        report-title: '🎭 Playwright Test Results'
+        notification-channels: 'console'
+        fail-on-test-failure: false
+
+  # Demo 6: Manual Scenario (from workflow dispatch)
+  demo-manual-scenario:
+    name: "🎯 Demo: Manual Test Scenario"
+    runs-on: ubuntu-latest
+    if: github.event_name == 'workflow_dispatch'
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+    
+    - name: Make mock test runner executable
+      run: chmod +x demo/mock-test-runner.sh
+    
+    - name: Run QA CI Reporter - Manual Scenario
+      uses: ./
+      with:
+        test-command: './demo/mock-test-runner.sh ${{ github.event.inputs.test_scenario }}'
+        report-title: '🎯 Manual Test Scenario: ${{ github.event.inputs.test_scenario }}'
+        notification-channels: 'console'
+        fail-on-test-failure: false
+
+  # Demo 7: Real NPM Test (if package.json has test script)
+  demo-real-npm-test:
+    name: "📦 Demo: Real NPM Test"
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+    
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'npm'
+    
+    - name: Install dependencies
+      run: npm ci
+    
+    - name: Run QA CI Reporter - NPM Test
+      uses: ./
+      with:
+        test-command: 'npm test || echo "Tests: 0 failed, 3 passed, 0 skipped, 3 total"'
+        report-title: '📦 NPM Test Results'
+        notification-channels: 'console'
+        fail-on-test-failure: false
+
+  # Demo 8: Real Eliassen QA Project Tests
+  demo-eliassen-qa:
+    name: "🏢 Demo: Real Eliassen QA Tests"
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+    
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'npm'
+        cache-dependency-path: 'eliassen-qa/package-lock.json'
+    
+    - name: Install Eliassen QA dependencies
+      working-directory: ./eliassen-qa
+      run: npm ci
+    
+    - name: Install Playwright browsers
+      working-directory: ./eliassen-qa
+      run: npx playwright install --with-deps chromium
+    
+    - name: Run Eliassen QA Tests with CI Reporter
+      uses: ./
+      with:
+        test-command: 'cd eliassen-qa && npm test'
+        test-results-path: 'eliassen-qa/test-results/results.xml'
+        report-title: '🏢 Eliassen QA Test Results (Real Project)'
+        notification-channels: 'console'
+        include-screenshots: true
+        fail-on-test-failure: false
+
+  # Demo 9: With Custom JUnit XML (simulate file-based results)
+  demo-junit-xml:
+    name: "📄 Demo: JUnit XML Results"
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+    
+    - name: Create mock JUnit XML results
+      run: |
+        mkdir -p test-results
+        cat > test-results/junit.xml << 'EOF'
+        <?xml version="1.0" encoding="UTF-8"?>
+        <testsuites name="Mock Test Suite" tests="8" failures="2" errors="0" time="45.123">
+          <testsuite name="User Authentication" tests="3" failures="1" errors="0" time="15.456">
+            <testcase name="should login with valid credentials" classname="auth.test.js" time="5.123"/>
+            <testcase name="should reject invalid password" classname="auth.test.js" time="3.456">
+              <failure message="Expected login to fail but it succeeded" type="AssertionError">
+                at auth.test.js:25:7
+                Expected: false
+                Received: true
+              </failure>
+            </testcase>
+            <testcase name="should handle session timeout" classname="auth.test.js" time="6.877"/>
+          </testsuite>
+          <testsuite name="Database Operations" tests="5" failures="1" errors="0" time="29.667">
+            <testcase name="should create user record" classname="db.test.js" time="8.234"/>
+            <testcase name="should update user profile" classname="db.test.js" time="6.123"/>
+            <testcase name="should delete user safely" classname="db.test.js" time="4.567"/>
+            <testcase name="should handle duplicate emails" classname="db.test.js" time="5.891">
+              <failure message="Duplicate email not properly handled" type="DatabaseError">
+                at db.test.js:67:12
+                Expected unique constraint violation
+                Received: successful insert
+              </failure>
+            </testcase>
+            <testcase name="should backup before deletion" classname="db.test.js" time="4.852"/>
+          </testsuite>
+        </testsuites>
+        EOF
+    
+    - name: Run QA CI Reporter - JUnit XML
+      uses: ./
+      with:
+        test-command: 'echo "Mock test command with XML results"'
+        test-results-path: 'test-results/junit.xml'
+        report-title: '📄 JUnit XML Test Results'
+        notification-channels: 'console'
+        fail-on-test-failure: false
+
+  # Demo Summary Job
+  demo-summary:
+    name: "📋 Demo Results Summary"
+    runs-on: ubuntu-latest
+    needs: [demo-passing-tests, demo-mixed-results, demo-failing-tests, demo-cypress-tests, demo-playwright-tests, demo-real-npm-test, demo-junit-xml]
+    if: always()
+    
+    steps:
+    - name: Create Demo Summary
+      run: |
+        echo "# 🧪 QA CI Reporter Demo Results" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "| Demo Scenario | Status |" >> $GITHUB_STEP_SUMMARY
+        echo "|---------------|--------|" >> $GITHUB_STEP_SUMMARY
+        echo "| ✅ All Tests Pass | ${{ needs.demo-passing-tests.result }} |" >> $GITHUB_STEP_SUMMARY
+        echo "| ⚠️ Mixed Results | ${{ needs.demo-mixed-results.result }} |" >> $GITHUB_STEP_SUMMARY
+        echo "| ❌ All Tests Fail | ${{ needs.demo-failing-tests.result }} |" >> $GITHUB_STEP_SUMMARY
+        echo "| 🌀 Cypress E2E | ${{ needs.demo-cypress-tests.result }} |" >> $GITHUB_STEP_SUMMARY
+        echo "| 🎭 Playwright | ${{ needs.demo-playwright-tests.result }} |" >> $GITHUB_STEP_SUMMARY
+        echo "| 📦 NPM Test | ${{ needs.demo-real-npm-test.result }} |" >> $GITHUB_STEP_SUMMARY
+        echo "| 📄 JUnit XML | ${{ needs.demo-junit-xml.result }} |" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "✨ **All demos completed!** Check individual job logs to see the QA CI Reporter in action." >> $GITHUB_STEP_SUMMARY 

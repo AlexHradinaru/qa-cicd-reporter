@@ -1,0 +1,115 @@
+name: 'QA CI Reporter'
+description: 'Run tests, parse results, and send reports via Slack, Telegram, or email'
+author: 'Your Name'
+
+branding:
+  icon: 'check-circle'
+  color: 'green'
+
+inputs:
+  test-command:
+    description: 'Command to run tests (e.g., "npm test", "npx cypress run")'
+    required: true
+    default: 'npm test'
+  
+  test-results-path:
+    description: 'Path to test results file (JUnit XML or JSON)'
+    required: false
+    default: 'test-results.xml'
+  
+  report-title:
+    description: 'Title for the test report'
+    required: false
+    default: 'Test Results Report'
+  
+  notification-channels:
+    description: 'Comma-separated list of notification channels (slack, telegram, email)'
+    required: true
+    default: 'slack'
+  
+  # Slack Configuration
+  slack-webhook-url:
+    description: 'Slack webhook URL for notifications'
+    required: false
+  
+  slack-channel:
+    description: 'Slack channel to send notifications to'
+    required: false
+    default: '#ci-reports'
+  
+  # Telegram Configuration
+  telegram-bot-token:
+    description: 'Telegram bot token'
+    required: false
+  
+  telegram-chat-id:
+    description: 'Telegram chat ID to send notifications to'
+    required: false
+  
+  # Email Configuration
+  email-smtp-host:
+    description: 'SMTP server host'
+    required: false
+  
+  email-smtp-port:
+    description: 'SMTP server port'
+    required: false
+    default: '587'
+  
+  email-username:
+    description: 'Email username'
+    required: false
+  
+  email-password:
+    description: 'Email password'
+    required: false
+  
+  email-from:
+    description: 'Email sender address'
+    required: false
+  
+  email-to:
+    description: 'Comma-separated list of email recipients'
+    required: false
+  
+  # Report Configuration
+  include-logs:
+    description: 'Include test logs in the report'
+    required: false
+    default: 'true'
+  
+  include-screenshots:
+    description: 'Include screenshots in the report (for visual tests)'
+    required: false
+    default: 'false'
+  
+  fail-on-test-failure:
+    description: 'Fail the action if tests fail'
+    required: false
+    default: 'true'
+
+outputs:
+  test-status:
+    description: 'Overall test status (passed/failed)'
+  
+  total-tests:
+    description: 'Total number of tests run'
+  
+  passed-tests:
+    description: 'Number of tests that passed'
+  
+  failed-tests:
+    description: 'Number of tests that failed'
+  
+  skipped-tests:
+    description: 'Number of tests that were skipped'
+  
+  test-duration:
+    description: 'Total test execution time'
+  
+  report-url:
+    description: 'URL to the generated report (if applicable)'
+
+runs:
+  using: 'node20'
+  main: 'dist/index.js' 
