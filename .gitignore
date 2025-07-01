@@ -5,7 +5,7 @@ yarn-debug.log*
 yarn-error.log*
 
 # Build outputs
-dist/
+# dist/ # Comment out for GitHub Actions
 build/
 lib/
 
